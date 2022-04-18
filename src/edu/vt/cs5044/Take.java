@@ -14,7 +14,7 @@ public class Take implements Command {
 	public String execute(Player player, String secondWord) {
 		if (secondWord==null)
 		{
-			return null;
+			return MoreMessages.takeWhat();
 		}
 		
 		MyPlayer myPlayer = (MyPlayer) player;

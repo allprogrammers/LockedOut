@@ -12,10 +12,10 @@ public class Use implements Command {
 
 	@Override
 	public String execute(Player player, String secondWord) {
-		if(secondWord.isEmpty())
+		if(secondWord==null)
 		{
-			return null;
-		}
+			return MoreMessages.useWhat();
+		} 
 		
 		MyPlayer myPlayer = (MyPlayer) player;
 		
@@ -28,9 +28,6 @@ public class Use implements Command {
 				if(i.isUsable())
 				{
 					itemToUse = (IUsable)i;
-				}
-				else {
-					return MoreMessages.useCant(secondWord);
 				}
 			}
 		}

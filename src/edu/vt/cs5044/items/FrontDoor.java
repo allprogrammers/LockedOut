@@ -12,10 +12,15 @@ import edu.vt.cs5044.adventure.Message;
 public class FrontDoor extends Item implements IUsable, IDoor {
 
 	private boolean isLocked;
+	
+	public boolean isLocked()
+	{
+		return this.isLocked;
+	}
 
 	public FrontDoor(MyRoom[] roomsToBeUsedIn) {
 		super("front-door");
-		this.isContainer = true;
+		this.isContainer = false;
 		
 		this.isUsable = true;
 		this.roomsToBeUsedIn = roomsToBeUsedIn;
@@ -27,20 +32,19 @@ public class FrontDoor extends Item implements IUsable, IDoor {
 
 	@Override
 	public String useItem(MyPlayer player) {
-		if(this.isLocked)
-		{
-			return Message.openCant(this.getName());
-		}
-		FullGoCommand cmd = (new FullGoCommand("north"));
-		cmd.execute(player, null);
-		player.completeQuest();
-		return Message.openSuccess(this.getName());
+		return MoreMessages.useCant(getName());
 	}
 
 	@Override
-	public String unlock() {
+	public String unlock(MyPlayer player) {
+		if(!this.isLocked)
+		{
+			return MoreMessages.doorAlreadyUnLocked(this.getName());
+		}
 		this.isLocked = false;
-		return MoreMessages.doorNotLocked(getName());
+		MyRoom room = (MyRoom) player.getCurrentRoom();
+		room.Unlock("north");
+		return MoreMessages.doorUnLocked(getName());
 	}
 	
 	@Override
@@ -48,15 +52,15 @@ public class FrontDoor extends Item implements IUsable, IDoor {
 	{
 		if(this.isLocked)
 		{
-			return Message.examineClosedContainer(this.getName());
+			return MoreMessages.doorLocked(this.getName());
 		}
-		return MoreMessages.doorNotLocked(this.getName());
+		return MoreMessages.doorUnLocked(this.getName());
 	}
 	
 	@Override
 	public String openContainer(MyPlayer player)
 	{
-		return this.useItem(player);
+		return Message.openCant(getName());
 	}
 
 }

@@ -28,7 +28,7 @@ public class Examine implements Command {
 	public String execute(Player player, String secondWord) {
 		if (secondWord==null)
 		{
-			return null;
+			return MoreMessages.examineWhat();
 		}
 		
 		MyPlayer myPlayer = (MyPlayer) player;

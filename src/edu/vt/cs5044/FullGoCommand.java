@@ -8,14 +8,16 @@ import edu.vt.cs5044.adventure.Player;
 public class FullGoCommand extends GoCommand {
 	
 	private String dir;
+	private boolean type;
 	public FullGoCommand(String dir) {
 		super();
 		
 		if(dir.length()==0)
 		{
-			this.dir = "go";
+			this.type=true;
 		}else
 		{
+			this.type=false;
 			this.dir = dir;
 		}
 	}
@@ -23,29 +25,21 @@ public class FullGoCommand extends GoCommand {
 	@Override
 	public String execute(Player player, String secondWord)
 	{
-		
-		String result;
-		MyRoom room = (MyRoom)player.getCurrentRoom();
-		if(room.lockedDir.get(this.dir))
+		String dir;
+		if(this.type)
 		{
-			String name;
-			if(((MyRoom)room).doorName.containsKey(this.dir))
-			{
-				name = ((MyRoom)room).doorName.get(this.dir);
-				return MoreMessages.doorLocked(name);
-			}
-			
-		}
-		if(this.dir=="go")
-		{
-			result  = super.execute(player, secondWord);
+			dir = secondWord;
 		}else
 		{
-			result = super.execute(player, this.dir);
+			dir = this.dir;
 		}
-		//System.out.println(player.getCurrentRoom().getName());
 		
-		return result;
+		MyRoom room = (MyRoom) player.getCurrentRoom();
+		if(room.lockedDir.containsKey(dir) && room.lockedDir.get(dir))
+		{
+			return MoreMessages.doorLocked(room.doorName.get(dir));
+		}
+		return super.execute(player, dir);
 	}
 
 }

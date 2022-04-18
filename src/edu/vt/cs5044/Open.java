@@ -22,16 +22,24 @@ public class Open implements Command {
 		MyPlayer myPlayer = (MyPlayer) player;
 		MyRoom myRoom = (MyRoom) myPlayer.getCurrentRoom();
 		
-		if(myRoom.isDark())
-		{
-			return Message.openDark();
-		}
+		
+		
 		
 		Item i = myPlayer.lookInIventoryOrRoom(secondWord);
 		if(i==null)
 		{
 			return Message.itemCantSee(secondWord);
 		}
+		
+		if(!i.isContainer())
+		{
+			return Message.openCant(secondWord);
+		}
+		if(myRoom.isDark())
+		{
+			return Message.openDark();
+		}
+		
 		if(i.isContainer())
 		{
 			if(i.items.size()==0)

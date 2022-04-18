@@ -39,9 +39,10 @@ public class SpareKey extends Item implements IUsable {
 		}
 		IDoor door = null;
 		
+		Item toUseOn = null;
 		for(Item i:this.canBeUsedOn)
 		{
-			Item toUseOn = player.lookInIventoryOrRoom(i.getName());
+			toUseOn = player.lookInIventoryOrRoom(i.getName());
 			if(toUseOn!=null)
 			{
 				door = (IDoor) toUseOn;
@@ -50,7 +51,11 @@ public class SpareKey extends Item implements IUsable {
 		}
 		if(door!=null)
 		{
-			return door.unlock();
+			if(!door.isLocked())
+			{
+				return MoreMessages.doorAlreadyUnLocked(toUseOn.getName());
+			}
+			return door.unlock(player);
 		}
 		return MoreMessages.useCant(getName());
 	}

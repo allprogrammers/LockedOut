@@ -2,11 +2,15 @@ package edu.vt.cs5044.adventure;
 
 import edu.vt.cs5044.FullGoCommand;
 import edu.vt.cs5044.IUsable;
+import edu.vt.cs5044.Inventory;
 import edu.vt.cs5044.Item;
 import edu.vt.cs5044.MoreMessages;
 import edu.vt.cs5044.MyGame;
 import edu.vt.cs5044.MyPlayer;
 import edu.vt.cs5044.MyRoom;
+import edu.vt.cs5044.Open;
+import edu.vt.cs5044.Take;
+import edu.vt.cs5044.Use;
 import edu.vt.cs5044.adventure.Game;
 import edu.vt.cs5044.adventure.Player;
 import edu.vt.cs5044.adventure.Room;
@@ -104,14 +108,10 @@ public class MyGameTest {
 			room.addItems((Item) i);
 		}
 		assertTrue(sb.useItem(player).equals(MoreMessages.useCant(((Item) sb).getName())));
-		assertTrue(sd.useItem(player).equals(MoreMessages.doorLocked(((Item) sd).getName())));
-		assertTrue(fd.useItem(player).equals(MoreMessages.doorLocked(((Item) fd).getName())));
+		assertTrue(sd.useItem(player).equals(MoreMessages.useCant(((Item) sd).getName())));
+		assertTrue(fd.useItem(player).equals(MoreMessages.useCant(((Item) fd).getName())));
 		assertTrue(fr.useItem(player).equals(MoreMessages.useCant(((Item) fr).getName())));
-		assertTrue(lb.useItem(player).equals(MoreMessages.NeedScrewDriver()));
-		assertTrue(scd.useItem(player).equals(MoreMessages.usedScrewDriver()));
-		assertTrue(lb.useItem(player).equals(MoreMessages.bulbAdded()));
-		assertTrue(sk.useItem(player).equals(MoreMessages.doorNotLocked(((Item) sd).getName())));
-		assertTrue(sd.useItem(player).equals(MoreMessages.Success()));
+		assertTrue(lb.useItem(player).equals(MoreMessages.NoPlaceForBulb()));
 
 	}
 	
@@ -128,9 +128,22 @@ public class MyGameTest {
 		Item[] items = new Item[] { (Item) sd, (Item) fd };
 		Item sb = new ShoeBox(rooms);
 		Item fr = new FakeRock(rooms);
+		
+		
+		assertEquals(
+				Message.examineEmptyContainer(fr.getName()),
+				fr.getDescription()
+				);
+		SpareKey sk = new SpareKey(rooms,new Item[] {fd,sd});
+		fr.addItem(sk);
+		
+		assertEquals(
+				Message.examineClosedContainer(fr.getName()),
+				fr.getDescription()
+				);
+		
 		Item lb = new LightBulb(rooms);
 		WallLantern wl = new WallLantern(rooms);
-		Item sk = new SpareKey(rooms, items);
 		Item scd = new ScrewDriver(rooms);
 		
 		Item[] itemss = new Item[] { sb, sd, fr, lb, wl, sk, scd, fd };
@@ -142,19 +155,206 @@ public class MyGameTest {
 		assertTrue(game.processInput("x "+sd.getName()).equals(MoreMessages.doorLocked(sd.getName())));
 		assertTrue(game.processInput("x "+fd.getName()).equals(MoreMessages.doorLocked(fd.getName())));
 		assertTrue(game.processInput("x "+scd.getName()).equals(MoreMessages.seemsNormal(scd.getName())));
-		assertTrue(game.processInput("x "+wl.getName()).equals(MoreMessages.descriptionLanternBroken()));
-		assertTrue(game.processInput("x "+lb.getName()).equals(MoreMessages.seemsNormal(lb.getName())));
-		assertTrue(game.processInput("x "+sk.getName()).equals(MoreMessages.seemsNormal(sk.getName())));
-		assertTrue(game.processInput("x "+fr.getName()).equals(MoreMessages.examineEmptyContainer(fr.getName())));
-		sb.addItem(scd);
-		fr.addItem(sk);
-		wl.addBulb((LightBulb) lb);
-		
-		assertTrue(game.processInput("x "+sb.getName()).equals(MoreMessages.examineClosedContainer(sb.getName())));
-		assertTrue(game.processInput("x "+fr.getName()).equals(MoreMessages.examineClosedContainer(fr.getName())));
-		assertTrue(game.processInput("x "+wl.getName()).equals(MoreMessages.descriptionLanternFixed()));
 		
 	}
+	
+	@Test
+	public void test_wl()
+	{
+		MyPlayer player = (MyPlayer) getPlayer();
+		MyRoom room = (MyRoom) getRoom();
+		MyRoom[] rooms = new MyRoom[] { room };
+		
+		WallLantern wl = new WallLantern(rooms);
+		room.addItems(wl);
+		ScrewDriver scd = new ScrewDriver(rooms);
+		assertTrue(wl.getDescription().equals(MoreMessages.descriptionLanternBroken()+" "+Message.examineClosedContainer(wl.getName())));
+		scd.useItem(player);
+		assertEquals(
+				MoreMessages.descriptionLanternBroken()+" "+MoreMessages.examineEmptyContainer(wl.getName()),
+				wl.getDescription()
+				);
+		wl.addBulb(new LightBulb(rooms));
+
+		assertEquals(
+				MoreMessages.descriptionLanternFixed()+" "+MoreMessages.seeBulb(),
+				wl.getDescription()
+				);
+	}
+	
+	@Test
+	public void test_sk()
+	{
+		MyPlayer player = (MyPlayer) getPlayer();
+		MyRoom room = (MyRoom) getRoom();
+		MyRoom[] rooms = new MyRoom[] { room };
+		
+		FrontDoor fd = new FrontDoor(rooms);
+		SideDoor sd = new SideDoor(rooms);
+		
+		SpareKey sk = new SpareKey(rooms, new Item[] {fd,sd});
+		assertEquals(
+				sk.useItem(player),
+				MoreMessages.useCant(sk.getName()));
+		
+		room.addItems(fd);
+		
+		assertEquals(
+				sk.useItem(player),
+				MoreMessages.doorUnLocked(fd.getName()));
+		room.removeFromRoom(fd);
+		room.addItems(sd);
+		assertEquals(
+				sk.useItem(player),
+				MoreMessages.doorUnLocked(sd.getName()));
+		
+		assertEquals(
+				sk.useItem(player),
+				MoreMessages.doorAlreadyUnLocked(sd.getName()));
+		
+		
+	}
+	
+	
+	
+	@Test
+	public void test_take()
+	{
+		MyPlayer player = (MyPlayer) getPlayer();
+		MyRoom room = (MyRoom) getRoom();
+		MyRoom[] rooms = new MyRoom[] { room };
+		Take take = new Take();
+		
+		Inventory i = new Inventory();
+		assertEquals(
+				Message.inventoryEmpty(),
+				i.execute(player,null));
+
+		FrontDoor fd = new FrontDoor(rooms);
+		SideDoor sd = new SideDoor(rooms);
+		
+		SpareKey sk = new SpareKey(rooms, new Item[] {fd,sd});
+		
+		assertEquals(
+				Message.itemCantSee(fd.getName()),
+				take.execute(player, fd.getName()));
+		
+		
+		
+		room.addItems(fd);
+		
+		assertEquals(
+				Message.takeCant(fd.getName()),
+				take.execute(player, fd.getName()));
+		
+		room.addItems(sk);
+		assertEquals(
+				Message.takeSuccess(sk.getName()),
+				take.execute(player, sk.getName()));
+		
+		assertEquals(
+				"You are carrying the spare-key.",
+				i.execute(player,null));
+		
+		assertEquals(
+				null,
+				i.execute(player,""));
+		
+		assertEquals(
+				Message.takeAlready(sk.getName()),
+				take.execute(player, sk.getName()));
+		
+		assertEquals(
+				MoreMessages.takeWhat(),
+				take.execute(player, null));
+		
+		
+		
+		
+		
+	}
+	
+	@Test
+	public void test_open()
+	{
+		MyPlayer player = (MyPlayer) getPlayer();
+		MyRoom room = (MyRoom) getRoom();
+		MyRoom[] rooms = new MyRoom[] { room };
+		Open open = new Open();
+		
+
+		ShoeBox sb = new ShoeBox(rooms);
+		LightBulb lb = new LightBulb(rooms);
+		sb.addItem(lb);
+		
+		
+		
+		assertEquals(
+				Message.itemCantSee(sb.getName()),
+				open.execute(player, sb.getName()));
+		
+		room.addItems(sb);
+		
+		assertEquals(
+				Message.openSuccess(sb.getName())+" You see the light-bulb",
+				open.execute(player, sb.getName()));
+		
+		room.setDark(true);
+		
+		assertEquals(
+				Message.openDark(),
+				open.execute(player, sb.getName()));
+		
+		
+	}
+	
+	@Test
+	public void test_use()
+	{
+		MyPlayer player = (MyPlayer) getPlayer();
+		MyRoom room1 = (MyRoom) getRoom();
+		MyRoom room2 = new MyRoom("test");
+		MyRoom[] rooms = new MyRoom[] { room1,room2 };
+		MyRoom.addDoor(room1, room2, "north", true, "front-door");
+		SideDoor sd = new SideDoor(rooms);
+		FrontDoor fd = new FrontDoor(rooms);
+		room2.addItems(fd);
+		room1.addItems(sd);
+		
+		WallLantern wl = new WallLantern(rooms);
+		room1.addItems(wl);
+		
+		LightBulb lb = new LightBulb(rooms);
+		room1.addItems(lb);
+		
+		FakeRock fr = new FakeRock(rooms);
+		ShoeBox sb = new ShoeBox(rooms);
+		
+		Use use = new Use();
+		Open open = new Open();
+		Take take = new Take();
+		take.execute(player, lb.getName());
+		assertEquals(
+				MoreMessages.useWhat(),
+				use.execute(player, null));
+		assertEquals(
+				MoreMessages.onlyInventory(),
+				use.execute(player, wl.getName()));
+		assertEquals(
+				Message.examineClosedContainer(wl.getName()),
+				use.execute(player, lb.getName()));
+		
+		assertEquals(
+				MoreMessages.onlyInventory(),
+				use.execute(player, sb.getName()));
+		fd.unlock(player);
+		FullGoCommand fgc = new FullGoCommand("");
+		assertEquals("You move north.",
+				fgc.execute(player, "north"));
+	}
+	
+	
+	
 
 	/**
 	 * Return the player.

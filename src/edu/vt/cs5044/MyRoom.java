@@ -73,6 +73,11 @@ public class MyRoom extends Room {
 		
 	}
 	
+	public void Unlock(String dir)
+	{
+		this.lockedDir.put(dir, false);
+	}
+	
 	public static void addDoor(MyRoom from, MyRoom to,String dir,boolean locked,String name)
     {
     	Map<String,String> opposite = new HashMap<>();

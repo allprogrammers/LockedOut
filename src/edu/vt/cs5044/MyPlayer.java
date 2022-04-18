@@ -32,6 +32,12 @@ public class MyPlayer extends Player {
 		tor.addAll(((MyRoom)this.getCurrentRoom()).getItems());
 		return tor;
 	}
+	
+	public void removeFromInventory(Item item)
+	{
+		this.inventory.remove(item);
+	}
+	
 	public Item lookInIventoryOrRoom(String item)
 	{
 		for(Item i: this.getInventoryAndRoomItems())

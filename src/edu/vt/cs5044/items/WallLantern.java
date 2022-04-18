@@ -45,9 +45,14 @@ public class WallLantern extends Item {
 	}
 	public String unscrew()
 	{
+		if (!this.isLocked)
+		{
+			return Message.openAlready(getName());
+		}
 		this.isLocked=false;
-		return MoreMessages.usedScrewDriver();
-	}
+		this.setDescription(MoreMessages.examineOpenContainer(this.getName()));
+		return Message.openSuccess(this.getName());
+	}/*
 	@Override
 	public String openContainer(MyPlayer player)
 	{
@@ -59,7 +64,7 @@ public class WallLantern extends Item {
 		
 		return super.openContainer(player);
 		
-	}
+	}*/
 
 	public String addBulb(LightBulb lightBulb) {
 		if(this.isLocked)
@@ -74,9 +79,18 @@ public class WallLantern extends Item {
 	@Override
 	public String getDescription()
 	{
+		String opened;
+		if(this.isLocked)
+		{
+			opened = Message.examineClosedContainer(this.getName());
+		}else
+		{
+			opened = MoreMessages.examineEmptyContainer(this.getName());
+		}
+		
 		if(this.items.size()==0)
-			return MoreMessages.descriptionLanternBroken();
-		return MoreMessages.descriptionLanternFixed();
+			return MoreMessages.descriptionLanternBroken()+" "+opened;
+		return MoreMessages.descriptionLanternFixed()+" "+MoreMessages.seeBulb();
 	}
 
 }

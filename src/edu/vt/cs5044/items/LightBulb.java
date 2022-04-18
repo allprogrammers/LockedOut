@@ -6,6 +6,7 @@ import edu.vt.cs5044.Item;
 import edu.vt.cs5044.MoreMessages;
 import edu.vt.cs5044.MyPlayer;
 import edu.vt.cs5044.MyRoom;
+import edu.vt.cs5044.adventure.Message;
 
 public class LightBulb extends Item implements IUsable {
 
@@ -34,13 +35,14 @@ public class LightBulb extends Item implements IUsable {
 			}
 		}
 		if(wl==null)
-			return "No Place to put the light bulb";
+			return MoreMessages.NoPlaceForBulb();
 		
 		if(wl.isLocked())
 		{
-			return MoreMessages.NeedScrewDriver();
+			return Message.examineClosedContainer(wl.getName());
 		}
 		wl.addBulb(this);
+		player.removeFromInventory(this);
 		
 		return MoreMessages.bulbAdded();
 	}
